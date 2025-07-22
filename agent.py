@@ -1,6 +1,9 @@
 import subprocess
+import os
 from tools.get_date import get_current_date
 from tools.get_file import list_files
+from tools.summarize_file import summarize_file
+import re
 
 def ask_llm(prompt):
     # Handle the tool based commands
@@ -8,7 +11,15 @@ def ask_llm(prompt):
         return get_current_date()
     elif 'list files' in prompt.lower():
         return list_files()
-    
+    elif 'summarize' in prompt.lower():
+        matches = re.findall(r'"(.*?)"|(\S+)', prompt)
+
+        candidates = [m[0] if m[0] else m[1] for m in matches]
+        for candidate in candidates:
+            if os.path.isfile(candidate) and candidate.lower().endswith((".pdf", ".txt")):
+                return summarize_file(candidate)
+
+        return "Please include a valid filename to summarize."
     # otherwise send it to ollama
     result = subprocess.run(
         ['ollama', 'run', 'mistral'], 
