@@ -1,5 +1,7 @@
 import datetime
 import customtkinter as ctk
+import speech_recognition as sr
+import threading
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -29,6 +31,41 @@ class PersonalAssistantApp(ctk.CTk):
         send_button = ctk.CTkButton(input_frame, text="Send", command=self.send_message)
         send_button.pack(side="left")
 
+        # Add mic button
+        mic_button = ctk.CTkButton(input_frame, text="🎤Voice", command=self.listen_voice_input)
+        mic_button.pack(side="left")
+
+    def listen_voice_input(self):
+        def record_and_transcribe():
+            recognizer = sr.Recognizer() 
+
+            with sr.Microphone() as source:
+                self.chat_display.configure(state="normal")
+                self.chat_display.insert("end", "🎙️ Listening...\n")
+                self.chat_display.configure(state="disabled")
+                self.chat_display.see("end")
+
+                try:
+                    audio = recognizer.listen(source, timeout=5, phrase_time_limit=10)
+                    text = recognizer.recognize_google(audio)
+
+                    self.input_field.delete(0, "end")
+                    self.input_field.insert(0, text)
+
+                    self.send_message()
+                except sr.WaitTimeoutError:
+                    self.display_error("⏳ Timeout: No speech detected.")
+                except sr.UnknownValueError:
+                    self.display_error("🤔 Sorry, I couldn't understand you.")
+                except sr.RequestError:
+                    self.display_error("🚫 Could not connect to Google STT.")
+
+        threading.Thread(target=record_and_transcribe).start()
+    def display_error(self, msg):
+        self.chat_display.configure(state="normal")
+        self.chat_display.insert("end", f"{msg}\n")
+        self.chat_display.configure(state="disabled")
+        self.chat_display.see("end")
     def send_message(self, event=None):
         user_msg = self.input_field.get().strip()
 

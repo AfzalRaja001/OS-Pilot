@@ -16,7 +16,7 @@ def ask_llm(prompt):
 
         candidates = [m[0] if m[0] else m[1] for m in matches]
         for candidate in candidates:
-            if os.path.isfile(candidate) and candidate.lower().endswith((".pdf", ".txt")):
+            if os.path.isfile(candidate) and candidate.lower().endswith((".pdf", ".txt", '.java', '.c', '.py', '.cpp', '.js', '.html', '.css', '.json', '.xml', '.ppt', '.pptx', '.xlsx', '.xls')):
                 return summarize_file(candidate)
 
         return "Please include a valid filename to summarize."
